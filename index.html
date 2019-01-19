@@ -1,9 +1,43 @@
 <!DOCTYPE html>
 <html>
-   <head>
-        Testing
-   </head>
-   <body>
+<head>
+    <title>JSSample</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+</head>
+<body>
 
-   </body>
+
+    jQuery.ajax({
+        url : 'https://demo-api.ig.com/gateway/deal/session',
+        type: 'POST',
+        dataType : "json",
+        data: {identifier: "A12345", password: "112233"}
+        beforeSend: function(xhr){xhr.setRequestHeader('X-Header', 'header-value');},    
+      });
+<script type="text/javascript">
+    $(function() {
+        var params = {
+            // Request parameters
+        };
+      
+        $.ajax({
+            url: "https://eastus2.api.cognitive.microsoft.com/text/analytics/v2.0/languages" + $.param(params),
+            beforeSend: function(xhrObj){
+                // Request headers
+                xhrObj.setRequestHeader("Content-Type","application/json");
+                xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key","1620f89a31c44658b536e9ff39540dca");
+            },
+            type: "POST",
+            // Request body
+            body: {"documents": [{"id": "1","text": "Hello world"},{"id": "2","text": "Bonjour tout le monde"}]},
+        })
+        .done(function(data) {
+            alert("success");
+        })
+        .fail(function() {
+            alert("error");
+        });
+    });
+</script>
+</body>
 </html>
