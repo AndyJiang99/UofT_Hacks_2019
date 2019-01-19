@@ -2,4 +2,5 @@
     <string name="app_name">Garb Sort</string>
     <string name="button_home">Proceed</string>
     <string name="cd_iv_display_camera">Displays captured camera image</string>
+    <string name="cd_iv_menu_logo">ImageView for menu\'s logo</string>
 </resources>
