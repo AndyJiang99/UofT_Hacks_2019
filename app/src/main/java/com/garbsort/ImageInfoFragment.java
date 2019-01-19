@@ -47,11 +47,8 @@ public class ImageInfoFragment extends Fragment {
             pathname = getArguments().getString("path");
             Log.e("PATHNAME", pathname + thumbnail.toString());
             Drawable bgDrawable = Drawable.createFromPath(pathname);
-            if(bgDrawable != null)thumbnail.setBackground(bgDrawable);
-            else{
-                bgDrawable = Drawable.createFromPath(Environment.getExternalStoragePublicDirectory(
-                        Environment.DIRECTORY_PICTURES + pathname).toString());
-                if(bgDrawable != null)thumbnail.setBackground(bgDrawable);
+            if(bgDrawable != null) {
+                thumbnail.setBackground(bgDrawable);
             }
         }
     }
