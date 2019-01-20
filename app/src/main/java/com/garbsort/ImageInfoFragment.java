@@ -34,7 +34,7 @@ public class ImageInfoFragment extends Fragment {
     private String pathname;
     private ImageView thumbnail;
     private Bitmap compBitmap;
-    private CallReq c;
+    CallReq c;
     public static final String uriBase = "https://eastus.api.cognitive.microsoft.com/vision/v2.0/analyze";
     public static final String uriKey = "312f7b6b79fd4562ae3ad1572adbc071";
     public ImageInfoFragment() {
@@ -59,6 +59,7 @@ public class ImageInfoFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        c = (CallReq) getContext();
         thumbnail = getActivity().findViewById(R.id.iv_thumbnail);
         if (getArguments() != null) {
             pathname = getArguments().getString("path");
@@ -66,7 +67,10 @@ public class ImageInfoFragment extends Fragment {
                 compBitmap = BitmapFactory.decodeFile(pathname);
                 thumbnail.setImageBitmap(compBitmap);
             try {
-                c.init(compBitmap);
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                compBitmap.compress(Bitmap.CompressFormat.JPEG, 10, stream);
+                byte[] byteArray = stream.toByteArray();
+                c.initiate(byteArray);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -87,6 +91,6 @@ public class ImageInfoFragment extends Fragment {
         super.onDetach();
     }
     public interface CallReq{
-        int init(Bitmap bm)throws Exception;
+        int initiate(byte[] comp)throws Exception;
     }
 }

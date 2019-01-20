@@ -20,6 +20,7 @@ import com.garbsort.garbsort.R;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,22 +54,19 @@ public class ScannerActivity extends AppCompatActivity implements ScannerFragmen
     }
 
     @Override
-    public int init(Bitmap compBitmap) throws Exception{
+    public int initiate(byte[] compBitmap) throws Exception{
         OkHttpClient client = new OkHttpClient();
+        Log.e("call ex", "yeee");
 
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        compBitmap.compress(Bitmap.CompressFormat.PNG, 10, stream);
-        byte[] byteArray = stream.toByteArray();
-
-        RequestBody requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), byteArray);
+        RequestBody requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), compBitmap);
         Request request = new Request.Builder()
                 .url("https://eastus.api.cognitive.microsoft.com/vision/v2.0/analyze?visualFeatures=Categories&language=en")
                 .post(requestBody)
                 .addHeader("Content-Type", "application/octet-stream")
                 .addHeader("Ocp-Apim-Subscription-Key", "bf1fcf9d392e4e6c91c0f27cd3df1e68")
                 .build();
+        FileOutputStream fos = new FileOutputStream("test");
         Call call = client.newCall(request);
-        Log.e("call ex", "yeee" + request.toString());
 
         try(Response response = call.execute()){
             if(response.isSuccessful()){
