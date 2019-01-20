@@ -66,7 +66,7 @@ public class ScannerActivity extends AppCompatActivity implements ScannerFragmen
         RequestBody requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), compBitmap);
         Log.e("call ex2", requestBody.toString());
         Request request = new Request.Builder()
-                .url("https://eastus.api.cognitive.microsoft.com/vision/v2.0/analyze?visualFeatures=Categories&language=en")
+                .url("https://eastus.api.cognitive.microsoft.com/vision/v2.0/analyze?visualFeatures=Objects&language=en")
                 .post(requestBody)
                 .addHeader("Content-Type", "application/octet-stream")
                 .addHeader("Ocp-Apim-Subscription-Key", "bf1fcf9d392e4e6c91c0f27cd3df1e68")
@@ -94,7 +94,16 @@ public class ScannerActivity extends AppCompatActivity implements ScannerFragmen
                 Log.e("onResponse: ",  response.toString());
                 try {
                     JSONObject json = new JSONObject(response.body().string());
-                    Log.e("ksp", json.toString());
+                    //JSONObject highestJson = new JSONObject(json.getString("objects"));
+                    //JSONArray jsonArray = json.getJSONArray(json.getString("objects"));
+                    //Log.e("highest", highestJson.toString());
+                    //Log.e("arrya", jsonArray.get(0).toString());
+                    JSONArray jsonArray = json.getJSONArray("objects");
+
+                    Log.e("ksp", json.toString() + jsonArray.toString());
+                    Log.e("1", jsonArray.get(0).toString());
+                    JSONArray h = jsonArray.getJSONArray(0);
+                    Log.e("2", h.toString());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
