@@ -14,7 +14,9 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import com.garbsort.garbsort.R;
 
@@ -43,6 +45,7 @@ import static android.content.ContentValues.TAG;
 public class ScannerActivity extends AppCompatActivity implements ScannerFragment.ImageTakenListener, ImageInfoFragment.CallReq{
     private ViewPager viewPager;
     private FragmentPagerAdapter pagerAdapter;
+    private ImageInfoFragment theFragment;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,9 +63,9 @@ public class ScannerActivity extends AppCompatActivity implements ScannerFragmen
     }
 
     @Override
-    public int initiate(byte[] compBitmap) throws Exception{
+    public String initiate(byte[] compBitmap) throws Exception{
         OkHttpClient client = new OkHttpClient();
-
+        final String[] result = new String[1];
         RequestBody requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), compBitmap);
         Log.e("call ex2", requestBody.toString());
         Request request = new Request.Builder()
@@ -94,23 +97,25 @@ public class ScannerActivity extends AppCompatActivity implements ScannerFragmen
                 Log.e("onResponse: ",  response.toString());
                 try {
                     JSONObject json = new JSONObject(response.body().string());
-                    //JSONObject highestJson = new JSONObject(json.getString("objects"));
-                    //JSONArray jsonArray = json.getJSONArray(json.getString("objects"));
-                    //Log.e("highest", highestJson.toString());
-                    //Log.e("arrya", jsonArray.get(0).toString());
                     JSONArray jsonArray = json.getJSONArray("objects");
-
                     Log.e("ksp", json.toString() + jsonArray.toString());
                     Log.e("1", jsonArray.get(0).toString());
-                    JSONArray h = jsonArray.getJSONArray(0);
-                    Log.e("2", h.toString());
+                    JSONObject h = jsonArray.getJSONObject(0);
+                    final String name = h.getString("object");
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            theFragment.setupText(name);
+                        }
+                    });
+                    result[0] = name;
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
         });
-
-        return 0;
+        return result[0];
     }
 
     /**
@@ -118,12 +123,18 @@ public class ScannerActivity extends AppCompatActivity implements ScannerFragmen
      */
     public class FragmentPagerAdapter extends FragmentStatePagerAdapter {
         private Fragment baseFragment;
+        private Fragment currentFragment;
         private List<Fragment> fragments = new ArrayList<>();
-        /**
-                 * The fragment pager adapter
-                *
-                * @param fm the fragment manager
-                */
+        public Fragment getCurrentFragment(){
+            return currentFragment;
+        }
+        @Override
+        public void setPrimaryItem(ViewGroup container, int position, Object object) {
+            if (getCurrentFragment() != object) {
+                currentFragment = ((Fragment) object);
+            }
+            super.setPrimaryItem(container, position, object);
+        }
         public FragmentPagerAdapter(FragmentManager fm) {
             super(fm);
             baseFragment = ScannerFragment.newInstance();
@@ -132,13 +143,16 @@ public class ScannerActivity extends AppCompatActivity implements ScannerFragmen
 
         public int setNewImageFragment(File file){
             if(getCount() == 1){
-                fragments.add(ImageInfoFragment.newInstance(file));
+                theFragment = ImageInfoFragment.newInstance(file);
+                fragments.add(theFragment);
+
                 notifyDataSetChanged();
                 return 1;
             } else if (getCount() == 2){
                 int resetIndex = fragments.get(0) == baseFragment ? 1 : 0;
                 fragments.remove(resetIndex);
-                fragments.add(ImageInfoFragment.newInstance(file));
+                theFragment = ImageInfoFragment.newInstance(file);
+                fragments.add(theFragment);
                 notifyDataSetChanged();
                 return resetIndex;
             }

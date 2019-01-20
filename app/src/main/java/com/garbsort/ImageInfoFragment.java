@@ -2,7 +2,6 @@ package com.garbsort;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -11,23 +10,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.garbsort.garbsort.R;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.Map;
-
-import okhttp3.Call;
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 
 public class ImageInfoFragment extends Fragment {
@@ -47,6 +35,11 @@ public class ImageInfoFragment extends Fragment {
         args.putString("path", file.getPath());
         fragment.setArguments(args);
         return fragment;
+    }
+
+    public void setupText(String str){
+        TextView current = getActivity().findViewById(R.id.txt_pred);
+        current.setText(str);
     }
 
     @Override
@@ -70,7 +63,8 @@ public class ImageInfoFragment extends Fragment {
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
                 compBitmap.compress(Bitmap.CompressFormat.JPEG, 10, stream);
                 byte[] byteArray = stream.toByteArray();
-                c.initiate(byteArray);
+                String cx = c.initiate(byteArray);
+                setupText(cx);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -91,6 +85,6 @@ public class ImageInfoFragment extends Fragment {
         super.onDetach();
     }
     public interface CallReq{
-        int initiate(byte[] comp)throws Exception;
+        String initiate(byte[] comp)throws Exception;
     }
 }
