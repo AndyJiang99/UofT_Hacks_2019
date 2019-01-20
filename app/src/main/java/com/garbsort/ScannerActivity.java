@@ -2,6 +2,7 @@ package com.garbsort;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -17,14 +18,22 @@ import android.widget.FrameLayout;
 
 import com.garbsort.garbsort.R;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import okhttp3.Call;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
 import static android.content.ContentValues.TAG;
 
-public class ScannerActivity extends AppCompatActivity implements ScannerFragment.ImageTakenListener{
+public class ScannerActivity extends AppCompatActivity implements ScannerFragment.ImageTakenListener, ImageInfoFragment.CallReq{
     private ViewPager viewPager;
     private FragmentPagerAdapter pagerAdapter;
     @Override
@@ -41,6 +50,35 @@ public class ScannerActivity extends AppCompatActivity implements ScannerFragmen
     public void imageTaken(File file) {
         int currentItemIndex = pagerAdapter.setNewImageFragment(file);
         viewPager.setCurrentItem(currentItemIndex);
+    }
+
+    @Override
+    public int init(Bitmap compBitmap) throws Exception{
+        OkHttpClient client = new OkHttpClient();
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        compBitmap.compress(Bitmap.CompressFormat.PNG, 10, stream);
+        byte[] byteArray = stream.toByteArray();
+
+        RequestBody requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), byteArray);
+        Request request = new Request.Builder()
+                .url("https://eastus.api.cognitive.microsoft.com/vision/v2.0/analyze?visualFeatures=Categories&language=en")
+                .post(requestBody)
+                .addHeader("Content-Type", "application/octet-stream")
+                .addHeader("Ocp-Apim-Subscription-Key", "bf1fcf9d392e4e6c91c0f27cd3df1e68")
+                .build();
+        Call call = client.newCall(request);
+        Log.e("call ex", "yeee" + request.toString());
+
+        try(Response response = call.execute()){
+            if(response.isSuccessful()){
+                Log.e("Hell yea", "winner");
+            }
+            else    {
+                Log.e("sigh", "ure shit");
+            }
+        }
+        return 0;
     }
 
     /**
