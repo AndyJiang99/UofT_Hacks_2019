@@ -61,7 +61,7 @@ public class ImageInfoFragment extends Fragment {
                 thumbnail.setImageBitmap(compBitmap);
             try {
                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                compBitmap.compress(Bitmap.CompressFormat.JPEG, 10, stream);
+                compBitmap.compress(Bitmap.CompressFormat.JPEG, 50, stream);
                 byte[] byteArray = stream.toByteArray();
                 String cx = c.initiate(byteArray);
                 setupText(cx);
