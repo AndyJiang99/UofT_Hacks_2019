@@ -55,7 +55,7 @@
         android:layout_marginBottom="128dp"
         android:contentDescription="@string/cd_iv_menu_logo"
         android:scaleType="fitCenter"
-        android:src="@drawable/ic_icon"
+        android:src="@mipmap/ic_launcher"
         app:layout_constraintBottom_toTopOf="@+id/btn_proceed"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
