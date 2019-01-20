@@ -3,4 +3,11 @@
     <string name="button_home">Proceed</string>
     <string name="cd_iv_display_camera">Displays captured camera image</string>
     <string name="cd_iv_menu_logo">ImageView for menu\'s logo</string>
+
+    <string name="txt_recycle">This goes to recycling!</string>
+    <string name="txt_garbage">This goes to the garbage!</string>
+    <string name="txt_compost">This goes to the compost bin!</string>
+    <string name="txt_special">This goes to a special recycling station!</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

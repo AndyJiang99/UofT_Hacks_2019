@@ -6,32 +6,95 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.garbsort.garbsort.R;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE;
 
 public class ScannerFragment extends Fragment {
     private Button captureButton;
     private FrameLayout cameraDisplay;
     private Camera camera;
+    private boolean storageWriteEnabled, storageReadEnabled;
+    private Camera.PictureCallback callback = new Camera.PictureCallback() {
+        @Override
+        public void onPictureTaken(byte[] data, Camera camera) {
+            File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+            if (pictureFile == null){
+                Log.d("PictureCallback", "Error creating media file, check storage permissions");
+                return;
+            }
+            try {
+                FileOutputStream fos = new FileOutputStream(pictureFile);
+                fos.write(data);
+                fos.close();
+                imageListener.imageTaken(pictureFile);
+            } catch (FileNotFoundException e) {
+                Log.d("FNFE", "File not found: " + e.getMessage());
+            } catch (IOException e) {
+                Log.d("IOE", "Error accessing file: " + e.getMessage());
+            }
+            camera.startPreview();
+        }
+    };
+    public interface ImageTakenListener{
+        void imageTaken(File file);
+    }
+    ImageTakenListener imageListener;
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try {
+            imageListener = (ImageTakenListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString()
+                    + " must implement OnHeadlineSelectedListener");
+        }
+    }
     public ScannerFragment() {
         // Required empty public constructor
     }
-    public static ScannerFragment newInstance() {
+
+    private static File getOutputMediaFile(int type){
+        File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), "MyCameraApp");
+        if (! mediaStorageDir.exists()){
+            if (! mediaStorageDir.mkdirs()){
+                Log.d("MyCameraApp", "failed to create directory");
+                return null;
+            }
+        }
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        File mediaFile;
+        if (type == MEDIA_TYPE_IMAGE){
+            mediaFile = new File(mediaStorageDir.getPath() + File.separator +
+                    "IMG_"+ timeStamp + ".jpg");
+        } else {
+            return null;
+        }
+        return mediaFile;
+    }
+    public static ScannerFragment newInstance()  {
         ScannerFragment fragment = new ScannerFragment();
-        Bundle args = new Bundle();
-        fragment.setArguments(args);
         return fragment;
     }
 
@@ -51,7 +114,35 @@ public class ScannerFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
         cameraDisplay = getActivity().findViewById(R.id.camera_preview);
         captureButton = getActivity().findViewById(R.id.bt_capture);
+        captureButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(camera != null && storageWriteEnabled){
+                    camera.takePicture(null, null, callback);
+                }
+            }
+        });
         checkCameraPermission();
+        checkStoragePermission();
+    }
+    private void checkStoragePermission(){
+        if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            if((ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED))
+            {
+                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
+            } else {
+                storageWriteEnabled = true;
+            }
+            if( ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 3);
+            } else {
+                storageReadEnabled = true;
+            }
+        } else {
+            storageReadEnabled = true;
+            storageWriteEnabled = true;
+        }
     }
     private void checkCameraPermission(){
         if(ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED){
@@ -72,28 +163,32 @@ public class ScannerFragment extends Fragment {
                 }
                 return;
             }
+            case 2: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    storageWriteEnabled = true;
+                }
+            }
+            case 3: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    storageReadEnabled = true;
+                }
+            }
         }
     }
-
     private void onRequestGranted(){
         if(checkCameraHardware(getContext())){
             try {
                 camera = Camera.open();
                 Log.e( "CAMERAFOUND ", camera + "< camera" );
+                CameraPreview cameraPreview = new CameraPreview(getActivity(), camera);
+                FrameLayout preview = getActivity().findViewById(R.id.camera_preview);
+                preview.addView(cameraPreview);
             } catch (Exception e) {
                 Log.e("CAMERAFAIL", "CAMERA FAILED TO OPEN");
             }
-            if(camera != null){
-                setupPreviewDisplay(camera);
-            }
         }
-    }
-    private void setupPreviewDisplay(Camera camera){
-        Log.e("CAMERA FOUND", camera + "< camera" );
-        Toast.makeText(getContext(), "camera found", Toast.LENGTH_SHORT);
-        CameraPreview cameraPreview = new CameraPreview(getContext(), camera);
-        FrameLayout preview = getActivity().findViewById(R.id.camera_preview);
-        preview.addView(cameraPreview);
     }
     /** Check if this device has a camera */
     private boolean checkCameraHardware(Context context) {
